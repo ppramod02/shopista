@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter } from 'react-router-dom';
+import { createHashRouter } from 'react-router-dom';
 import Provider from './components/Provider';
 import Layout from './components/Layout';
 import App from './App';
@@ -10,7 +10,7 @@ import CartPage from './routes/CartPage';
 import './index.css';
 
 
-const router = createBrowserRouter([
+const router = createHashRouter([
     {
       path: '/',
       element: <Layout />,
