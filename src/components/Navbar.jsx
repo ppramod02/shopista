@@ -26,7 +26,7 @@ export default function Navbar({ user }) {
         } catch (error) {
             // Log any errors that occur during the signOut process
             console.log(error);
-    }
+        }
     }
 
     useEffect(() => {
@@ -37,22 +37,23 @@ export default function Navbar({ user }) {
 
     return (    
         <nav className='flex border px-4 md:px-10 py-6 gap-2 md:gap-8'>
-            <h1 className='text-3xl font-bold mr-auto'>Shopista.</h1>
-                <Link to='/cart'>
-                    <button className="relative rounded-full flex items-center gap-1 px-3 py-2">
-                        <p className='font-medium'>Cart</p>
-                        <AiOutlineShoppingCart fontSize='1.3rem' />   
-                        {
-                            (cartCount > 0) && 
-                            (
-                                <div className='absolute flex justify-center align-center h-[20px] aspect-[1/1] rounded-full bg-[#f66] right-0 top-0'>
-                                    <p className="text-white font-medium text-sm">{ cartCount }</p>
-                                </div>
-                            )
-                        }
-                    </button>
-                </Link>
-
+            <Link to='/' className='mr-auto'>
+                <h1 className='text-3xl font-bold'>Shopista.</h1>
+            </Link>
+            <Link to='/cart'>
+                <button className="relative rounded-full flex items-center gap-1 px-3 py-2">
+                    <p className='font-medium'>Cart</p>
+                    <AiOutlineShoppingCart fontSize='1.3rem' />   
+                    {
+                        (cartCount > 0) && 
+                        (
+                            <div className='absolute flex justify-center align-center h-[20px] aspect-[1/1] rounded-full bg-[#f66] right-0 top-0'>
+                                <p className="text-white font-medium text-sm">{ cartCount }</p>
+                            </div>
+                        )
+                    }
+                </button>
+            </Link>
             <div>
                 {
                     user ? 
@@ -63,9 +64,9 @@ export default function Navbar({ user }) {
                     )
                     :
                     (
-                        <a href='/signin' className="rounded-full flex items-center gap-2 bg-[#adf] px-3 py-2">
+                        <Link to='/signin' className="rounded-full flex items-center gap-2 bg-[#adf] px-3 py-2">
                             <p className='text-sm font-medium md:text-md'>Sign In</p>
-                        </a>
+                        </Link>
                     )
                 }
             </div>

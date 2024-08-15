@@ -3,7 +3,7 @@ import { Formik } from "formik";
 import { auth } from "../firebase";
 import { createUserWithEmailAndPassword, updateProfile, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { MdChevronRight } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function SignUp() {
     const navigate = useNavigate();
@@ -121,7 +121,7 @@ export default function SignUp() {
                     </form>
                 )}
                 </Formik>
-                <p className='mt-2 text-sm'>Already a user? <a href='/signin' className='text-[#66f] underline'>Sign in</a></p>
+                <p className='mt-2 text-sm'>Already a user? <Link to='/signin' className='text-[#66f] underline'>Sign in</Link></p>
             </div>
         </div>
     )
