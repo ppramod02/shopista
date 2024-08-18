@@ -18,12 +18,14 @@ export default function CartPage() {
 
     async function handleCheckout() {
         try {
-            setCartItems([]);
             if(auth.currentUser) {
+                setCartItems([]);
                 await updateDoc(doc(db, 'cart', auth.currentUser.uid), { products: [] });
+                navigate('/');
+                toast.success('Thank you for shopping!');
+            } else {
+                toast.error('You need to login first');
             }
-            navigate('/');
-            toast.success('Thank you for shopping!');
         } catch (error) {
             console.error(error);
         }

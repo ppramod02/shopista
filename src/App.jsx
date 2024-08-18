@@ -3,8 +3,8 @@ import { auth } from './firebase';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import products from '../public/products.js';
 import ProductCard from './components/ProductCard.jsx';
-import './App.css';
 import SkeletonCard from './components/SkeletonCard.jsx';
+import './App.css';
 
 const generateMoreProducts = (originalProducts, numCopies) => {
   const updatedProducts = [];
@@ -39,7 +39,7 @@ function App() {
       }
 			
       setDisplayedProducts(prevProducts => [...prevProducts, ...nextProducts]);
-    }, 2000); // Simulate network delay
+    }, 500); // Simulate network delay
   };
 
   // Initialize user state

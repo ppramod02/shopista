@@ -6,13 +6,14 @@ import App from './App';
 import SignUp from './routes/SignUp';
 import SignIn from './routes/SignIn';
 import CartPage from './routes/CartPage';
+import ErrorPage from './components/ErrorPage';
 import './index.css';
-
 
 const router = createHashRouter([
     {
       path: '/',
       element: <Layout />,
+      errorElement: <ErrorPage />,
       children: [
         {
           path: '/',
@@ -30,7 +31,7 @@ const router = createHashRouter([
           path: '/cart',
           element: <CartPage />
         }
-      ]
+      ],
     }
 ]);
 
