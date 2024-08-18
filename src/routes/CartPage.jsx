@@ -1,15 +1,33 @@
 import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import CartContext from "../components/Context";
 import CartProduct from "../components/CartProduct";
+import { auth, db } from "../firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import { toast } from "react-hot-toast";
 
 export default function CartPage() {
    // Import the CartContext using useContext to access cartItems.
-    const { cartItems } = useContext(CartContext);
+    const { cartItems, setCartItems } = useContext(CartContext);
+    const navigate = useNavigate();
 
     // Initialize the state variables to keep track of subtotal, discount, and total.
     const [subtotal, setSubtotal] = useState(0);
     const [discount, setDiscount] = useState(0);
     const [total, setTotal] = useState(0);
+
+    async function handleCheckout() {
+        try {
+            setCartItems([]);
+            if(auth.currentUser) {
+                await updateDoc(doc(db, 'cart', auth.currentUser.uid), { products: [] });
+            }
+            navigate('/');
+            toast.success('Thank you for shopping!');
+        } catch (error) {
+            console.error(error);
+        }
+    }
 
     // useEffect hook runs whenever cartItems changes.
     useEffect(() => {
@@ -34,11 +52,13 @@ export default function CartPage() {
     
     return (
         <div className='m-4 flex flex-col md:flex-row gap-4'>
-            <div className='flex flex-wrap justify-center md:justify-start gap-2 md:gap-6'>
-                { cartItems && cartItems.map((product, key) => <CartProduct product={ product } key={ key } />) }
+            <div className='flex flex-wrap items-start justify-center md:justify-start gap-2 md:gap-6'>
+                { cartItems.length ? cartItems.map((product, key) => <CartProduct product={ product } key={ key } />) : (
+                    <h4 className='text-xl font-medium'>Your cart is empty.</h4>
+                ) }
             </div>
 
-            <div className='h-full md:min-w-[30rem] flex flex-col p-4 gap-2 border rounded-xl shadow-lg'>
+            <div className='h-full md:ml-auto md:min-w-[30rem] flex flex-col p-4 gap-2 border rounded-xl shadow-lg'>
                 <h2 className='mb-2 text-xl font-semibold'>Cart Summary</h2>
                 <div>
                     { 
@@ -55,7 +75,7 @@ export default function CartPage() {
                     <p><span className='mr-2 text-xs text-red-800'>(-₹{ discount })</span>₹{ total }</p>
                 </div>
                 <div>
-                    <button className='float-right font-medium rounded-full flex items-center gap-2 bg-[#adf] px-3 py-2'>Proceed to Checkout</button>
+                    <button onClick={ handleCheckout } className='float-right font-medium rounded-full flex items-center gap-2 bg-[#adf] px-3 py-2'>Proceed to Checkout</button>
                 </div>
             </div>
         </div>

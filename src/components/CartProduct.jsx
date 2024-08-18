@@ -1,50 +1,76 @@
 import { useState, useContext, useEffect } from "react";
 import CartContext from "./Context";
-import { TbHeart, TbHeartFilled, TbMinus, TbPlus, TbX } from "react-icons/tb";
-import { AiOutlineShoppingCart } from "react-icons/ai";
+import { TbMinus, TbPlus, TbX } from "react-icons/tb";
+import { auth, db } from "../firebase";
+import { getDoc, doc, updateDoc } from "firebase/firestore";
 
 export default function CartProduct({ product }) {
     // Import the setCartItems function from the CartContext using useContext.
-    const { setCartItems } = useContext(CartContext);
+	const { setCartItems } = useContext(CartContext);
 
-    // Function to increase the quantity of a specific product in the cart.
-    function increaseQuantity() {
-        // Update the cartItems state using setCartItems.
-        setCartItems((items) => 
-            // Iterate over each item in the cart.
-            items.map(item => 
-                // If the item's id matches the product's id, increase its quantity by 1.
-                item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-            )
-        );
-    }
+	// Function to change the quantity of a specific product in the cart.
+	// The function takes a value parameter, which is used to increase or decrease the quantity.
+	async function changeQuantity(value) {
+		// Update the cartItems state using setCartItems.
+		setCartItems((items) => 
+			// Iterate over each item in the cart.
+			items.map(item => 
+				// If the item's id matches the product's id, adjust its quantity by the given value.
+				item.id === product.id ? { ...item, quantity: item.quantity + value } : item
+			)
+			// Filter out any items that have a quantity of 0, effectively removing them from the cart.
+			.filter(item => item.quantity !== 0)
+		);
 
-    // Function to decrease the quantity of a specific product in the cart.
-    function decreaseQuantity() {
-        // Update the cartItems state using setCartItems.
-        setCartItems((items) => 
-            // Iterate over each item in the cart.
-            items.map(item => 
-                // If the item's id matches the product's id, decrease its quantity by 1.
-                item.id === product.id ? { ...item, quantity: item.quantity - 1 } : item
-            )
-            // Filter out any items that have a quantity of 0 (effectively removing them from the cart).
-            .filter(item => item.quantity !== 0)
-        );
-    }
+		// If the user is authenticated, update the cart in Firestore.
+		if (auth.currentUser) {
+			// Retrieve the current user's cart from Firestore.
+			const docSnap = await getDoc(doc(db, 'cart', auth.currentUser.uid));
+			// Get the products array from the cart document.
+			let prevData = docSnap.data().products;
 
-    // Function to delete a specific product from the cart.
-    function deleteItem() {
-        // Update the cartItems state using setCartItems.
-        setCartItems(items => 
-            // Filter out the item that matches the product's id, removing it from the cart.
-            items.filter(item => item.id !== product.id)
-        );
-    }
+			// Adjust the quantity of the specific product in the products array.
+			prevData = prevData.map(item => 
+				item.id === product.id ? { ...item, quantity: item.quantity + value } : item
+			)
+			// Filter out any products with a quantity of 0.
+			.filter(item => item.quantity !== 0);
+
+			// Update the cart document in Firestore with the modified products array.
+			await updateDoc(doc(db, 'cart', auth.currentUser.uid), {
+				products: prevData
+			});
+		}
+	}
+
+	// Function to delete a specific product from the cart.
+	async function deleteItem() {
+		// Update the cartItems state using setCartItems.
+		setCartItems(items => 
+			// Filter out the item that matches the product's id, removing it from the cart.
+			items.filter(item => item.id !== product.id)
+		);
+
+		// If the user is authenticated, update the cart in Firestore.
+		if (auth.currentUser) {
+			// Retrieve the current user's cart from Firestore.
+			const docSnap = await getDoc(doc(db, 'cart', auth.currentUser.uid));
+			// Get the products array from the cart document.
+			let prevData = docSnap.data().products;
+
+			// Filter out the product that matches the product's id, removing it from the products array.
+			prevData = prevData.filter(item => item.id !== product.id);
+			
+			// Update the cart document in Firestore with the modified products array.
+			await updateDoc(doc(db, 'cart', auth.currentUser.uid), {
+				products: prevData
+			});
+		}
+	}
 
     return (
         <div className='grow max-w-[25rem] overflow-hidden relative flex bg-[#fcffff] justify-between p-4 gap-4 border rounded-xl shadow-lg'>
-            <div className='z-10 absolute flex justify-center items-center h-[30px] aspect-[1/1] rounded-full bg-[#f44] right-[-5px] top-[-5px]'>
+            <div className='z-10 absolute flex justify-center items-center h-[30px] aspect-[1/1] rounded-full bg-[#f44] left-[-5px] top-[-5px]'>
                 <p className="text-white font-medium text-sm">{ product.quantity }</p>
             </div>
             <div className='mx-auto'>
@@ -64,12 +90,12 @@ export default function CartProduct({ product }) {
                 </div>
                 <div className='mt-auto flex justify-between items-center'>
                     <div>
-                        <button onClick={ increaseQuantity }>
+                        <button onClick={ () => changeQuantity(1) }>
                             <TbPlus fontSize='1.5rem' />
                         </button>
                     </div>
                     <div>
-                        <button onClick={ decreaseQuantity }>
+                        <button onClick={ () => changeQuantity(-1) }>
                             <TbMinus fontSize='1.5rem' />    
                         </button>                 
                     </div>

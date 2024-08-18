@@ -1,55 +1,85 @@
 import { useState, useEffect } from "react";
 import { Formik } from "formik";
-import { auth } from "../firebase";
-import { createUserWithEmailAndPassword, updateProfile, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { auth, db } from "../firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { MdChevronRight } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
+import { Toaster, toast } from "react-hot-toast";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function SignUp() {
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // React Router's hook for navigating programmatically.
 
-    function validate(values) {
-        const errors = {};
-        if (!values.email) {
-            errors.email = 'required';
-        } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
-            errors.email = 'invalid email address';
-        }
+	// Function to validate the input values.
+	function validate(values) {
+		const errors = {};
 
-        if(!values.password) {
-            errors.password = 'required';
-        } else if(values.password.length < 8) {
-            errors.password = 'min. 8 characters required'
-        }
-        return errors;
-    }
+		// Check if the email field is empty.
+		if (!values.email) {
+			errors.email = 'required';
+		} 
+		// Validate the email format using a regular expression.
+		else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+			errors.email = 'invalid email address';
+		}
 
-    async function handleSubmit(values, setSubmitting) {
-        try {
-            // await setPersistence(auth, browserLocalPersistence);
-            const data = await createUserWithEmailAndPassword(auth, values.email, values.password);
-            if(data) {  
-                await updateProfile(data.user, {
-                    displayName: values.name,
-                });
-                navigate('/');
-            }
+		// Check if the password field is empty.
+		if (!values.password) {
+			errors.password = 'required';
+		} 
+		// Ensure the password is at least 8 characters long.
+		else if (values.password.length < 8) {
+			errors.password = 'min. 8 characters required';
+		}
 
-            setTimeout(() => {
-                setSubmitting(false);
-            }, 400);
-        } catch (error) {
-            if(error.code === 'auth/email-already-in-use') {
-                console.log('user already exists');
-            } else {
-                console.log('some error occurred during sign up');
-                console.log(error);
-            }
-        }
-    }
+		return errors; // Return any validation errors found.
+	}
+
+	// Function to handle form submission for creating a new user.
+	async function handleSubmit(values, setSubmitting) {
+		try {
+			// Attempt to create a new user with the provided email and password.
+			const data = await createUserWithEmailAndPassword(auth, values.email, values.password);
+			
+			if (data) {
+				// If the user is successfully created, update their profile with the provided display name.
+				await updateProfile(data.user, {
+					displayName: values.name,
+				});
+
+				// Create a new document in the 'cart' collection for the user, initializing with an empty products array.
+				await setDoc(doc(db, 'cart', data.user.uid), {
+					products: [],
+				});
+
+				// Display a success toast message after the user is created.
+				toast.success('User created successfully!');
+
+				// Navigate to the home page after successful sign-up.
+				navigate('/');
+			}
+
+			// Stop the form submission process after a short delay.
+			setTimeout(() => {
+				setSubmitting(false);
+			}, 400);
+		} catch (error) {
+			// Display an error toast message if sign-up fails.
+			toast.error('Some error occurred');
+
+			// Handle specific error cases, such as the email already being in use.
+			if (error.code === 'auth/email-already-in-use') {
+				console.log('user already exists'); // Log a message if the email is already in use.
+			} else {
+				console.log('some error occurred during sign up'); // Log any other errors during sign-up.
+				console.log(error); // Log the error details for debugging.
+			}
+		}
+	}
 
     return (
         <div style={ bg } className='signup flex justify-center items-center h-[85vh]'>
+            <Toaster position='bottom-right' />
             <div className='flex flex-col p-20 bg-transparent backdrop-blur-sm border rounded-xl'>
                 <h1 className='text-2xl font-bold mb-6'>Sign Up</h1>
                 <Formik
@@ -99,13 +129,14 @@ export default function SignUp() {
                             <label htmlFor='password' className='text-sm text-slate-400'>Password</label>
                             <input 
                             id='password' 
-                            placeholder='•••••••' 
+                            placeholder='•••••••'
                             className='px-4 py-1 rounded border text-md focus:outline-brand' 
                             type='password'
                             name="password"
                             onChange={handleChange}
                             onBlur={handleBlur}
                             value={values.password} 
+                            autoComplete='true'
                             required />
                             <span className='ml-auto text-xs text-red-700'>{errors.password && touched.password && errors.password}</span>
                         </div>

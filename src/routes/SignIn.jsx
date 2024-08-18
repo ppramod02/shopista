@@ -1,49 +1,60 @@
 import { useState, useEffect } from "react";
 import { Formik } from "formik";
-import { browserLocalPersistence, setPersistence, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { MdChevronRight } from "react-icons/md";
 import { auth } from "../firebase";
 import { Link, useNavigate } from "react-router-dom";
+import { toast, Toaster } from "react-hot-toast";
 
 export default function SignIn() {
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // React Router's hook for programmatic navigation.
 
-    function validate(values) {
-        const errors = {};
-        if (!values.email) {
-            errors.email = 'required';
-        } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
-            errors.email = 'invalid email address';
-        }
-        return errors;
-    }
+	function validate(values) {
+		const errors = {};
+		
+		// Check if the email field is empty.
+		if (!values.email) {
+			errors.email = 'required';
+		} 
+		// Validate the email format using a regular expression.
+		else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
+			errors.email = 'invalid email address';
+		}
 
-    async function handleSubmit(values, setSubmitting) {
-        try {
-            
-            // await setPersistence(auth, browserLocalPersistence);
-            const data = await signInWithEmailAndPassword(auth, values.email, values.password);
+		return errors; // Return any validation errors found.
+	}
 
-            if(data) {  
-                console.log(data);
-                navigate('/');
-            }
-            
-            setTimeout(() => {
-                setSubmitting(false);
-            }, 400);
-        } catch (error) {
-            console.log(error);
-            if(error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-                console.log('invalid user credentials');
-            } else {
-                console.log('some error occurred during sign up');
-            }
-        }        
-    }
+	async function handleSubmit(values, setSubmitting) {
+		try {
+			// Attempt to sign in the user with the provided email and password.
+			const data = await signInWithEmailAndPassword(auth, values.email, values.password);
+			
+			// Display a success message upon successful sign-in.
+			toast.success("Signed in successfully!");
+
+			// Navigate to the home page upon successful sign-in.
+			navigate('/');
+			
+			// Stop the form submission process after a short delay.
+			setTimeout(() => {
+				setSubmitting(false);
+			}, 400);
+		} catch (error) {
+			// Display an error message if sign-in fails.
+			toast.error('Some error occurred');
+
+			// Handle specific authentication errors.
+			if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+				console.log('invalid user credentials'); // Log invalid user credentials error.
+			} else {
+				console.log('some error occurred during sign up'); // Log any other errors during sign-up.
+			}
+		}
+	}
 
     return (
         <div style={ bg } className='signup flex justify-center items-center h-[85vh]'>
+            <Toaster position='bottom-right' />
             <div className='flex flex-col p-20 bg-transparent backdrop-blur-sm border rounded-xl'>
                 <h1 className='text-2xl font-bold mb-6'>Sign In</h1>
                 <Formik
@@ -86,6 +97,7 @@ export default function SignIn() {
                             onChange={handleChange}
                             onBlur={handleBlur}
                             value={values.password} 
+                            autoComplete='true'
                             required />
                             <span className='ml-auto text-xs text-red-700'>{errors.password && touched.password && errors.password}</span>
                         </div>

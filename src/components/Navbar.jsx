@@ -1,13 +1,16 @@
 import { useContext, useEffect, useState } from "react";
+
 import { signOut } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import CartContext from "./Context";
 import { Link } from "react-router-dom";
 import { AiOutlineShoppingCart } from "react-icons/ai";
+import toast, { Toaster } from 'react-hot-toast';
+import { doc, getDoc } from "firebase/firestore";
 
 export default function Navbar({ user }) {
     // Use the useContext hook to get the cartItems state from the CartContext
-    const { cartItems } = useContext(CartContext);
+    const { cartItems, setCartItems } = useContext(CartContext);
 
     // Use the useState hook to create a state variable cartCount and initialize it to 0
     const [cartCount, setCartCount] = useState(0);
@@ -18,11 +21,8 @@ export default function Navbar({ user }) {
 
         try {
             // Call the signOut function with the auth object and await its response
-            const data = await signOut(auth);
-            // If the data is returned, do something with it (not implemented)
-            if (data) {
-
-            }
+            await signOut(auth);
+            toast.success('Signed out successfully!');
         } catch (error) {
             // Log any errors that occur during the signOut process
             console.log(error);
@@ -30,13 +30,25 @@ export default function Navbar({ user }) {
     }
 
     useEffect(() => {
+        async function getCart() {
+            const docSnap = await getDoc(doc(db, 'cart', auth.currentUser.uid));
+            if(docSnap.exists() && docSnap.data().products) {
+                setCartItems(docSnap.data().products);
+            }
+        }
+        
+        if(auth.currentUser) getCart();
+    }, [ auth.currentUser ]); // this effect runs only when the auth state changes
+    
+    useEffect(() => {
         // Set the cartCount state to the length of the cartItems array
         setCartCount(cartItems.length);
-
-    }, [cartItems]); // this effect runs only when the cartItems state changes
-
+        
+    }, [ cartItems ]);   // this effect runs only when the cart state changes
+    
     return (    
-        <nav className='flex border px-4 md:px-10 py-6 gap-2 md:gap-8'>
+        <nav className='z-20 sticky top-0 flex border px-4 bg-white md:px-10 py-6 gap-2 md:gap-8'>
+            <Toaster position='top-center' />
             <Link to='/' className='mr-auto'>
                 <h1 className='text-3xl font-bold'>Shopista.</h1>
             </Link>

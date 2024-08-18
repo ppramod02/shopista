@@ -3,6 +3,7 @@ import Navbar from './Navbar';
 import { auth } from '../firebase';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
+import Footer from './Footer';
 
 const Layout = () => {
   // Initialize the user state with the current authenticated user.
@@ -15,11 +16,12 @@ const Layout = () => {
   });
 
   return (
-    <div>
+    <div className='min-h-[100vh]'>
       <Navbar user={ user} />
       <main>
         <Outlet />
       </main>
+      <Footer />
     </div>
   );
 };

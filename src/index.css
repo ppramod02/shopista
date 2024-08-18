@@ -9,3 +9,7 @@
     box-sizing: border-box;
     font-family: 'Satoshi', sans-serif;
 }
+
+html {
+    min-height: 100vh;
+}
